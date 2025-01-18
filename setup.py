@@ -1,21 +1,16 @@
-from setuptools import setup, find_packages
+# filepath: /path/to/project/setup.py
+from setuptools import setup
+
+APP = ['endless-runner-stickman-sounds.py']
+DATA_FILES = []
+OPTIONS = {
+    'argv_emulation': True,
+    'packages': ['pygame'],
+}
 
 setup(
-    name="endless-runner",
-    version="2.0.0",
-    description="Endless Runner Game",
-    author="Saravanan Gnanaguru",
-    author_email="g.gsaravanan@gmail.com",
-    url="https://github.com/chefgs/endless-runner",
-    packages=find_packages(),
-    scripts=["endless-runner-stickman-sounds.py"],
-    install_requires=[
-        "pygame>=2.0.0"
-    ],
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-    python_requires='>=3.6',
+    app=APP,
+    data_files=DATA_FILES,
+    options={'py2app': OPTIONS},
+    setup_requires=['py2app'],
 )
