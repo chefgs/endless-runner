@@ -10,28 +10,17 @@ socketio = SocketIO(app)
 # Game variables
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 400
-player_size = 50
-hurdle_width = 30
-hurdle_height = 50
-hurdle_speed = 10
+
+player_size = 30
+
 tool_size = 30
-tool_speed = 10
+tool_speed = 5
+
+hurdle_width = 40
+hurdle_height = 80
+hurdle_speed = 4
+
 LEVEL_UP_SCORE = 200
-
-class Word(NamedTuple):
-    text: str
-    rect: dict
-    points: int
-
-WORD_BANK = [
-    "Selenium", "Python", "Java", "Docker", "Jenkins", "Git", "API", "AWS",
-    "Kubernetes", "CI/CD", "Agile", "Scrum", "TDD", "BDD", "Clean Code",
-    "Design Patterns", "RESTful", "GraphQL", "Microservices", "DevOps",
-    "Containers", "Cloud", "Azure", "GCP", "Monitoring", "Logging",
-    "Reporting", "Golang", "Rust", "Ruby", "Node.js", "JavaScript", "Java",
-    "Jira"
-]
-POINT_VALUES = [10, 20, 30]
 
 # Game state
 game_state = {
@@ -65,6 +54,19 @@ def handle_connect():
 @socketio.on('jump')
 def handle_jump():
     game_state['player_y_velocity'] = -15
+
+# Add game over screen handler
+@socketio.on('restart_game')
+def handle_restart():
+    game_state['player_y'] = SCREEN_HEIGHT - player_size - 20
+    game_state['player_y_velocity'] = 0
+    game_state['hurdles'] = []
+    game_state['tools'] = []
+    game_state['score'] = 0
+    game_state['level'] = 1
+    game_state['hurdle_speed'] = hurdle_speed
+    game_state['tool_speed'] = tool_speed
+    emit('game_state', game_state)
 
 @socketio.on('update')
 def handle_update():
@@ -115,7 +117,18 @@ def handle_update():
         })
         game_state['last_tool_time'] = current_time
 
-    # Update tools
+    # Add level progression check
+    check_level_progression()
+    
+    # Update hurdles with new speed
+    for hurdle in game_state['hurdles'][:]:
+        hurdle['x'] -= game_state['hurdle_speed']
+        if hurdle['x'] + hurdle_width < 0:
+            game_state['hurdles'].remove(hurdle)
+        elif check_collision(player_rect, hurdle):
+            game_over()
+
+    # Update tools with new speed
     for tool in game_state['tools'][:]:
         tool['x'] -= game_state['tool_speed']
         if tool['x'] + tool_size < 0:
@@ -123,9 +136,20 @@ def handle_update():
         elif check_collision(player_rect, tool):
             game_state['tools'].remove(tool)
             game_state['score'] += 10
+            # Check level progression after score increase
+            check_level_progression()
 
     # Emit updated game state to all clients
     emit('game_state', game_state, broadcast=True)
+
+# Add after game_state definition:
+def check_level_progression():
+    current_level = game_state['score'] // LEVEL_UP_SCORE + 1
+    if current_level > game_state['level']:
+        game_state['level'] = current_level
+        # Increase speeds
+        game_state['hurdle_speed'] = hurdle_speed + (current_level - 1) * 2
+        game_state['tool_speed'] = tool_speed + (current_level - 1) * 2
 
 def game_over():
     game_state['player_y'] = SCREEN_HEIGHT - player_size - 20
