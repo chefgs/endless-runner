@@ -57,42 +57,44 @@ class Word(NamedTuple):
     points: int
 
 WORD_BANK = [
-    ("Selenium", 20),
-    ("Python", 15),
-    ("Java", 10),
-    ("Docker", 25),
-    ("Jenkins", 30),
-    ("Git", 10),
-    ("API", 15),
-    ("AWS", 20),
-    ("Kubernetes", 35),
-    ("CI/CD", 25),
-    ("Agile", 20),
-    ("Scrum", 15),
-    ("TDD", 10),
-    ("BDD", 25),
-    ("SOLID", 30),
-    ("Clean Code", 35),
-    ("Design Patterns", 40),
-    ("RESTful", 20),
-    ("GraphQL", 25),
-    ("Microservices", 35),
-    ("DevOps", 30),
-    ("Containers", 25),
-    ("Cloud", 20),
-    ("Azure", 25),
-    ("GCP", 30),
-    ("Monitoring", 20),
-    ("Logging", 15),
-    ("Reporting", 10),
-    ("Golang", 25),
-    ("Rust", 30),
-    ("Ruby", 20),
-    ("Node.js", 15),
-    ("JavaScript", 10),
-    ("Java", 25),
-    ("Jira", 30),
+    "Selenium",
+    "Python",
+    "Java",
+    "Docker",
+    "Jenkins",
+    "Git",
+    "API",
+    "AWS",
+    "Kubernetes",
+    "CI/CD",
+    "Agile",
+    "Scrum",
+    "TDD",
+    "BDD",
+    "Clean Code",
+    "Design Patterns",
+    "RESTful",
+    "GraphQL",
+    "Microservices",
+    "DevOps",
+    "Containers",
+    "Cloud",
+    "Azure",
+    "GCP",
+    "Monitoring",
+    "Logging",
+    "Reporting",
+    "Golang",
+    "Rust",
+    "Ruby",
+    "Node.js",
+    "JavaScript",
+    "Java",
+    "Jira",
 ]
+
+# Randomize the value of words within the 3 values - 10, 20, 30
+POINT_VALUES = [10, 20, 30]
 
 words = []
 word_speed = 5
@@ -106,7 +108,7 @@ game_level = "easy"
 LEVEL_UP_SCORE = 200
 
 def reset_game():
-    global player_y, player_y_velocity, hurdles, words, score, last_hurdle_time, last_word_time, level, game_level
+    global player_y, player_y_velocity, hurdles, words, score, last_hurdle_time, last_word_time, level, game_level, hurdle_speed, word_speed
     player_y = SCREEN_HEIGHT - player_size - 20
     player_y_velocity = 0
     hurdles = []
@@ -116,6 +118,8 @@ def reset_game():
     last_word_time = 0
     level = 1
     game_level = show_menu()
+    hurdle_speed = 10
+    word_speed = 5
 
 def game_over_screen():
     screen.fill(WHITE)
@@ -192,6 +196,10 @@ def spawn_hurdle():
     
     new_hurdle = pygame.Rect(hurdle_x, hurdle_y, hurdle_width, hurdle_height)
     
+    # Ensure the new hurdle does not collide with the previous hurdle
+    if hurdles and new_hurdle.colliderect(hurdles[-1]):
+        return
+    
     # Check for collision with existing hurdles and words
     for hurdle in hurdles:
         if new_hurdle.colliderect(hurdle):
@@ -206,7 +214,13 @@ def spawn_hurdle():
         hurdle_spawn_rate = 800  # Further decrease spawn rate for hard level
 
 def spawn_word():
-    word_text, points = random.choice(WORD_BANK)
+    word_text = random.choice(WORD_BANK)
+    points = random.choice(POINT_VALUES)
+    
+    # Ensure the new word is not the same as the previous word
+    if words and word_text == words[-1].text:
+        return
+    
     text_surface = word_font.render(word_text, True, BLUE)
     word_x = SCREEN_WIDTH
     word_y = random.randint(50, SCREEN_HEIGHT - 50)
@@ -289,7 +303,8 @@ while running:
             game_level = "medium"
         elif level == 3:
             game_level = "hard"
-        reset_game()
+        hurdle_speed += 2  # Increase hurdle speed
+        word_speed += 1  # Increase word speed
 
     # Draw Player (Stickman)
     draw_stickman(screen, player.x, player.y)
