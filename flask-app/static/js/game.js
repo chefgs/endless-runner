@@ -3,7 +3,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Game constants
-const SCREEN_WIDTH = 800;
+const SCREEN_WIDTH = 850;
 const SCREEN_HEIGHT = 400;
 
 let gameState = null;

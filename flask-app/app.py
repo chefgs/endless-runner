@@ -8,7 +8,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 # Game variables
-SCREEN_WIDTH = 800
+SCREEN_WIDTH = 850
 SCREEN_HEIGHT = 400
 
 player_size = 30
